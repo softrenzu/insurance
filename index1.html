@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="apple-touch-icon" href="icon.png">
+  <title>保険料計算アプリ</title>
+  <style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+  </style>
+</head>
+<body>
+    <h1>保険料計算アプリ</h1>
+    <label for="amount">保険金額（1口100円で40口）：</label>
+    <input type="number" id="amount" value="40" min="0">
+    <p>オプション:</p>
+    <div>
+        <input type="checkbox" id="medical" name="option">
+        <label for="medical">医療</label>
+    </div>
+    <div>
+        <input type="checkbox" id="disease" name="option">
+        <label for="disease">3代疾病</label>
+    </div>
+    <div>
+        <input type="checkbox" id="injury" name="option">
+        <label for="injury">傷害</label>
+    </div>
+    <div>
+        <input type="checkbox" id="co-op" name="option">
+        <label for="co-op">生協</label>
+    </div>
+    <button id="calculate">計算</button>
+    <p>保険料： <span id="output">0</span> 円</p>
+  <script>
+    function calculateInsurance() {
+    const amount = parseInt(document.getElementById("amount").value);
+    const options = document.getElementsByName("option");
+    let additional = 0;
+
+    for (const option of options) {
+        if (option.checked) {
+            additional += 100000;
+        }
+    }
+
+    let insurance;
+    if (amount < 40) {
+        insurance = 620000 + additional;
+    } else {
+        insurance = 730000 + additional;
+    }
+
+    document.getElementById("output").textContent = insurance;
+}
+
+function calculateAndDisplayResult() {
+    const insurance = document.getElementById("output").textContent;
+    document.getElementById("shared-output").textContent = insurance;
+}
+
+
+document.getElementById("calculate").addEventListener("click", calculateInsurance);
+document.getElementById("share").addEventListener("click", calculateAndDisplayResult);
+  </script>
+</body>
+</html>
