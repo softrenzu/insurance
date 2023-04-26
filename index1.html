@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" href="icon.png">
-  <title>保険料計算アプリ</title>
+  <title>保障料計算アプリ</title>
   <style>
     body {
     font-family: Arial, sans-serif;
@@ -39,7 +39,7 @@
         <label for="co-op">生協</label>
     </div>
     <button id="calculate">計算</button>
-    <p>保険料： <span id="output">0</span> 円</p>
+    <p>保障料： <span id="output">0</span> 円</p>
   <script>
     function calculateInsurance() {
     const amount = parseInt(document.getElementById("amount").value);
@@ -53,7 +53,7 @@
     }
 
     let insurance;
-    if (amount < 40) {
+    if (amount < 39) {
         insurance = 620000 + additional;
     } else {
         insurance = 730000 + additional;
