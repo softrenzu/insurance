@@ -1,0 +1,15 @@
+{
+  "name": "rooomtech-insurance-compare-engine",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Source-available multi-tenant insurance comparison engine with commercial licensing controls.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --check server.js && node --check app.js && node --check admin.js && node --check widget.js && node tests/smoke.test.js",
+    "keys:generate": "node scripts/generate-license-keys.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
