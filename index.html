@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="保険商品を条件で絞り込み、主要項目を横並びで比較するためのサンプルWebアプリ">
+  <title>Insurance Compare Engine</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <p class="eyebrow">Insurance Compare Engine</p>
+      <h1>保険商品の比較を、分かりやすく。</h1>
+      <p class="lead">商品情報を同じ基準で整理し、条件による絞り込みと横並び比較を行うための比較エンジンです。</p>
+    </div>
+    <div class="license-badge">商用利用は有償ライセンスが必要です</div>
+  </header>
+
+  <main>
+    <section class="notice" aria-label="重要事項">
+      <strong>デモ版:</strong> 掲載データは架空のサンプルです。本アプリ自体は保険商品の推奨、募集、媒介を行いません。
+    </section>
+
+    <section class="controls" aria-label="比較条件">
+      <div class="field">
+        <label for="category">保険種類</label>
+        <select id="category">
+          <option value="all">すべて</option>
+          <option value="medical">医療</option>
+          <option value="life">生命</option>
+          <option value="cancer">がん</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="maxPremium">月額保険料上限</label>
+        <input id="maxPremium" type="number" min="0" step="500" value="10000">
+      </div>
+      <div class="field">
+        <label for="sort">並び順</label>
+        <select id="sort">
+          <option value="premiumAsc">保険料が低い順</option>
+          <option value="coverageDesc">保障額が高い順</option>
+          <option value="nameAsc">商品名順</option>
+        </select>
+      </div>
+      <button id="reset" type="button" class="secondary">条件をリセット</button>
+    </section>
+
+    <section class="summary" aria-live="polite">
+      <span id="resultCount">0</span> 件を表示中
+      <span class="separator">/</span>
+      比較選択 <span id="selectedCount">0</span> 件
+    </section>
+
+    <section id="products" class="product-grid" aria-label="商品一覧"></section>
+
+    <section id="comparisonSection" class="comparison-section" hidden>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">Side-by-side</p>
+          <h2>選択商品の比較</h2>
+        </div>
+        <button id="clearSelection" type="button" class="secondary">比較選択を解除</button>
+      </div>
+      <div class="table-wrap">
+        <table id="comparisonTable"></table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Source available. Business and organizational use requires a paid commercial license.</p>
+    <p>Commercial licensing and support: <a href="mailto:support@rooomtech.com">support@rooomtech.com</a></p>
+  </footer>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
