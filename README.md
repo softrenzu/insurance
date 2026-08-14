@@ -1,34 +1,77 @@
-# Insurance Compare Engine
+# Insurance Compare Engine v2
 
-保険商品情報を同じ項目で整理し、Web上で絞り込み・横並び比較するための軽量な比較エンジンです。
+保険商品をWeb上で整理、絞り込み、横並び比較、料金試算するためのsource-available比較エンジンです。
 
-## 現在の機能
+## v2機能
 
-- 保険種類による絞り込み
-- 月額保険料上限による絞り込み
-- 保険料・保障額・商品名による並び替え
-- 最大3商品までの横並び比較
-- 外部ライブラリ不要のHTML/CSS/JavaScript構成
-- 実在商品を使わないサンプルデータ
+- 動的な比較項目と最大3商品の横並び比較
+- 年齢、希望保障額、商品別料金ルールによる試算
+- CSV / JSON商品一括登録
+- 企業テナント管理
+- ブランド名、カラー、ロゴによるホワイトラベル
+- 比較主体、情報源、利害関係、更新日の表示
+- REST APIとiframe埋め込み
+- 利用量、監査ログ
+- Ed25519署名付き商用ライセンスキー
+- Tenant ID、有効期限、サイト数、許可ドメインの検証
+- `?admin=1` の管理画面
 
-`index1.html` と `index2.html` は2023年に作成された旧式の簡易保険料計算ページです。新しい比較エンジンは `index.html` を使用します。
+デモデータはすべて架空です。
 
-## ライセンス
+## 起動
 
-このリポジトリは source-available です。OSI準拠のオープンソースライセンスではありません。
+Node.js 20以上を使用します。
 
-個人・教育・学術などの非商用利用は `LICENSE.md` の条件に従って利用できます。
+```bash
+npm test
+ADMIN_TOKEN=change-this-secret node server.js
+```
 
-企業、事業者、業務委託先等による利用は、評価・PoC・デモ・開発・本番利用を含め、有償の商用ライセンスが必要です。特に、保険商品の比較、見積、検索、絞り込み、ランキング、推奨、リード獲得、営業支援、SaaS、API、ホワイトラベル、OEM、SI用途は商用ライセンスの対象です。
+比較画面: `http://localhost:3000/`
 
-商用利用・保守・導入支援: support@rooomtech.com
+管理画面: `http://localhost:3000/?admin=1`
 
-## 保険業規制について
+## API
 
-本ソフトウェアは比較UIとデータ表示のための技術基盤であり、保険商品の募集、媒介、推奨、法的助言を提供するものではありません。
+```text
+GET  /api/v1/health
+GET  /api/v1/config?tenant=demo
+GET  /api/v1/products?tenant=demo
+POST /api/v1/simulate?tenant=demo
+GET  /api/admin/state
+POST /api/admin/tenants
+POST /api/admin/products/import
+POST /api/admin/licenses/generate
+```
 
-実サービスで利用する事業者は、保険業法、監督指針、広告・表示、個人情報保護その他の適用法令を確認し、自ら必要な許認可・体制・表示を整備してください。
+管理APIは `x-admin-token` と起動時の `ADMIN_TOKEN` が一致する場合だけ利用できます。
 
-## データについて
+## CSV / JSON登録
 
-デモに含まれる会社名、商品名、保険料、保障額はすべて架空です。実在の保険会社・商品を意味しません。
+CSV基本列:
+
+```text
+id,name,company,category,premium,coverage
+```
+
+その他のCSV列は比較用属性として保持します。JSONでは `attributes` と `pricing` に追加比較項目や料金計算ルールを設定できます。
+
+## 埋め込み
+
+```html
+<iframe src="https://your-host.example/?tenant=customer1&embed=1" title="保険商品比較" width="100%" height="800" style="border:0"></iframe>
+```
+
+## 商用ライセンス
+
+このリポジトリはOSI準拠のオープンソースではありません。非商用利用は `LICENSE.md`、企業・事業利用は `COMMERCIAL_USE.md` に従います。評価、PoC、デモ、開発、本番、保険比較・見積・試算サイト、SaaS、API、埋め込み、ホワイトラベル、OEM、SI等の事業利用には有償契約が必要です。
+
+商用ライセンス、導入支援、保守: support@rooomtech.com
+
+ライセンスキーはEd25519署名方式です。発行用秘密鍵はライセンス発行側だけで保管し、利用環境には検証用公開鍵を配置します。
+
+## 保険比較サービスとしての設計
+
+標準機能では自動的な商品推奨や順位付けを行いません。比較主体、情報源、利害関係、更新日を表示でき、保険料以外の保障条件も比較できます。実サービスでは運営者自身が適用法令、許認可、表示、個人情報保護等を確認してください。
+
+`index1.html` と `index2.html` は2023年の旧式簡易計算ページです。v2は `index.html` を使用します。
