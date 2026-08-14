@@ -3,77 +3,27 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="保険商品を条件で絞り込み、主要項目を横並びで比較するためのサンプルWebアプリ">
+  <meta name="description" content="保険商品を同じ条件で整理し、比較・試算するためのWeb比較エンジン">
   <title>Insurance Compare Engine</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <div>
-      <p class="eyebrow">Insurance Compare Engine</p>
-      <h1>保険商品の比較を、分かりやすく。</h1>
-      <p class="lead">商品情報を同じ基準で整理し、条件による絞り込みと横並び比較を行うための比較エンジンです。</p>
-    </div>
-    <div class="license-badge">商用利用は有償ライセンスが必要です</div>
-  </header>
-
-  <main>
-    <section class="notice" aria-label="重要事項">
-      <strong>デモ版:</strong> 掲載データは架空のサンプルです。本アプリ自体は保険商品の推奨、募集、媒介を行いません。
-    </section>
-
-    <section class="controls" aria-label="比較条件">
-      <div class="field">
-        <label for="category">保険種類</label>
-        <select id="category">
-          <option value="all">すべて</option>
-          <option value="medical">医療</option>
-          <option value="life">生命</option>
-          <option value="cancer">がん</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="maxPremium">月額保険料上限</label>
-        <input id="maxPremium" type="number" min="0" step="500" value="10000">
-      </div>
-      <div class="field">
-        <label for="sort">並び順</label>
-        <select id="sort">
-          <option value="premiumAsc">保険料が低い順</option>
-          <option value="coverageDesc">保障額が高い順</option>
-          <option value="nameAsc">商品名順</option>
-        </select>
-      </div>
-      <button id="reset" type="button" class="secondary">条件をリセット</button>
-    </section>
-
-    <section class="summary" aria-live="polite">
-      <span id="resultCount">0</span> 件を表示中
-      <span class="separator">/</span>
-      比較選択 <span id="selectedCount">0</span> 件
-    </section>
-
-    <section id="products" class="product-grid" aria-label="商品一覧"></section>
-
-    <section id="comparisonSection" class="comparison-section" hidden>
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">Side-by-side</p>
-          <h2>選択商品の比較</h2>
-        </div>
-        <button id="clearSelection" type="button" class="secondary">比較選択を解除</button>
-      </div>
-      <div class="table-wrap">
-        <table id="comparisonTable"></table>
-      </div>
-    </section>
-  </main>
-
-  <footer>
-    <p>Source available. Business and organizational use requires a paid commercial license.</p>
-    <p>Commercial licensing and support: <a href="mailto:support@rooomtech.com">support@rooomtech.com</a></p>
-  </footer>
-
-  <script src="app.js" defer></script>
-</body>
-</html>
+<div id="publicApp">
+<header class="site-header" id="siteHeader"><div class="brand-row"><img id="brandLogo" class="brand-logo" alt="" hidden><div><p class="eyebrow">Insurance Compare Engine</p><h1 id="brandName">保険商品の比較を、同じ条件で。</h1><p class="lead">価格だけに偏らず、保障内容や条件を横並びで確認できます。</p></div></div><div class="license-badge">商用利用は有償ライセンスが必要です</div></header>
+<main>
+<section class="notice important"><strong>比較時の注意:</strong> 保険料だけでなく、保障内容、免責、引受条件、保険期間なども確認してください。掲載情報は契約の申込み・推奨を行うものではありません。</section>
+<section class="disclosure" id="disclosure"><h2>比較情報について</h2><dl><div><dt>比較主体</dt><dd id="operator">-</dd></div><div><dt>情報源</dt><dd id="dataSource">-</dd></div><div><dt>利害関係</dt><dd id="relationship">-</dd></div><div><dt>情報更新日</dt><dd id="updatedAt">-</dd></div></dl></section>
+<section class="controls" aria-label="比較条件"><div class="field"><label for="category">保険種類</label><select id="category"><option value="all">すべて</option></select></div><div class="field"><label for="maxPremium">月額保険料上限</label><input id="maxPremium" type="number" min="0" step="500" value="10000"></div><div class="field"><label for="sort">並び順</label><select id="sort"><option value="nameAsc">商品名順</option><option value="premiumAsc">保険料が低い順</option><option value="coverageDesc">保障額が高い順</option></select></div><div class="field"><label for="age">試算年齢</label><input id="age" type="number" min="18" max="100" value="40"></div><div class="field"><label for="desiredCoverage">希望保障額</label><input id="desiredCoverage" type="number" min="0" step="500000" value="1000000"></div><button id="reset" type="button" class="secondary">条件をリセット</button></section>
+<section class="summary" aria-live="polite"><span id="resultCount">0</span> 件を表示中 <span class="separator">/</span> 比較選択 <span id="selectedCount">0</span> 件</section><section id="errorBox" class="notice error" hidden></section><section id="products" class="product-grid" aria-label="商品一覧"></section>
+<section id="simulationSection" class="simulation-section" hidden aria-live="polite"><div class="section-heading"><div><p class="eyebrow">Simulation</p><h2>保険料試算</h2></div></div><div id="simulationResult" class="simulation-result"></div></section>
+<section id="comparisonSection" class="comparison-section" hidden><div class="section-heading"><div><p class="eyebrow">Side-by-side</p><h2>選択商品の比較</h2></div><button id="clearSelection" type="button" class="secondary">比較選択を解除</button></div><div class="table-wrap"><table id="comparisonTable"></table></div></section>
+</main><footer id="siteFooter"><p id="footerText">Source available. Business and organizational use requires a paid commercial license.</p><p>Commercial licensing and support: <a href="mailto:support@rooomtech.com">support@rooomtech.com</a></p></footer>
+</div>
+<div id="adminApp" hidden><div class="admin-shell"><p class="eyebrow">Commercial Admin</p><h1>Insurance Compare 管理画面</h1><p class="lead">企業テナント、ホワイトラベル、比較項目、商品データ、商用ライセンスを管理します。</p><div class="admin-toolbar"><div class="field"><label for="adminToken">ADMIN_TOKEN</label><input id="adminToken" type="password" autocomplete="off"></div><button id="loadState" class="primary">状態を読み込む</button></div><div class="admin-grid">
+<section class="admin-card"><h2>企業テナント</h2><div class="field"><label>Tenant ID</label><input id="tenantId" value="customer1"></div><div class="field"><label>企業・サービス名</label><input id="tenantName"></div><div class="field"><label>プラン</label><select id="tenantPlan"><option>commercial</option><option>enterprise</option></select></div><div class="field"><label>サイト上限</label><input id="siteLimit" type="number" min="1" value="1"></div><div class="field"><label>許可ドメイン 1行1件</label><textarea id="domains" placeholder="example.co.jp"></textarea></div><button id="saveTenant" class="primary">テナント保存</button></section>
+<section class="admin-card"><h2>ホワイトラベル・比較項目</h2><div class="field"><label>ブランド名</label><input id="brandName"></div><div class="field"><label>ブランドカラー</label><input id="brandColor" value="#185adb"></div><div class="field"><label>ロゴURL</label><input id="logoUrl"></div><div class="field"><label>比較主体</label><input id="operator"></div><div class="field"><label>情報源</label><input id="dataSource"></div><div class="field"><label>利害関係の説明</label><input id="relationship"></div><div class="field"><label>比較項目 JSON</label><textarea id="fieldsJson">[{"key":"company","label":"会社","type":"text"},{"key":"premium","label":"月額保険料","type":"yen"},{"key":"coverage","label":"保障額","type":"yen"}]</textarea></div></section>
+<section class="admin-card"><h2>商品一括登録 CSV / JSON</h2><div class="field"><label>対象Tenant ID</label><input id="importTenant" value="customer1"></div><div class="field"><label>登録モード</label><select id="importMode"><option value="replace">全置換</option><option value="upsert">追加・更新</option></select></div><div class="field"><label>ファイル</label><input id="productFile" type="file" accept=".csv,.json,application/json,text/csv"></div><p class="muted">CSV基本列: id,name,company,category,premium,coverage。その他の列は比較用属性として登録します。</p><button id="importProducts" class="primary">商品を登録</button></section>
+<section class="admin-card"><h2>商用ライセンス発行</h2><div class="field"><label>Tenant ID</label><input id="licenseTenant" value="customer1"></div><div class="field"><label>有効期限</label><input id="expiresAt" type="date"></div><div class="field"><label>サイト数</label><input id="licenseSites" type="number" min="1" value="1"></div><button id="generateLicense" class="primary">ライセンスキー生成</button><p class="muted">Ed25519秘密鍵はROOOMTECH側の発行環境だけに置き、顧客環境には公開鍵のみ配置します。</p></section><section class="admin-card wide"><h2>API応答・監査</h2><pre id="output" class="output">未読み込み</pre></section>
+</div></div></div>
+<script src="app.js" defer></script>
+</body></html>
