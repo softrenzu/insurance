@@ -1,26 +1,129 @@
 'use strict';
-const isAdminMode=new URLSearchParams(location.search).get('admin')==='1';document.getElementById('publicApp').hidden=isAdminMode;document.getElementById('adminApp').hidden=!isAdminMode;if(isAdminMode)initAdmin();else initComparison();
-function initComparison(){
-const params=new URLSearchParams(location.search),tenantId=params.get('tenant')||'demo',embedded=params.get('embed')==='1',selected=new Set();let products=[],tenant=null;
-const fallbackTenant={id:'demo',brand:{brandName:'Insurance Compare Engine',primaryColor:'#185adb',footerText:'デモ環境 - 掲載データは架空です'},disclosure:{operator:'デモ運営者',dataSource:'架空のサンプルデータ',relationship:'実在の保険会社との利害関係はありません',updatedAt:'2026-08-14'},fields:[{key:'company',label:'会社',type:'text'},{key:'category',label:'種類',type:'text'},{key:'premium',label:'月額保険料',type:'yen'},{key:'coverage',label:'主契約保障額',type:'yen'},{key:'deductible',label:'免責・自己負担',type:'text'},{key:'waitingPeriod',label:'待機期間',type:'text'}]};
-const fallbackProducts=[{id:'m1',name:'医療 Standard',company:'サンプル生命A',category:'医療',premium:2980,coverage:1000000,attributes:{deductible:'なし',waitingPeriod:'30日'}},{id:'m2',name:'医療 Light',company:'サンプル共済B',category:'医療',premium:1980,coverage:500000,attributes:{deductible:'5,000円',waitingPeriod:'30日'}},{id:'l1',name:'定期生命 1000',company:'サンプル生命C',category:'生命',premium:3480,coverage:10000000,attributes:{deductible:'-',waitingPeriod:'なし'}},{id:'c1',name:'がん Basic',company:'サンプル保険D',category:'がん',premium:2580,coverage:2000000,attributes:{deductible:'なし',waitingPeriod:'90日'}}];
-const byId=id=>document.getElementById(id),yen=value=>new Intl.NumberFormat('ja-JP').format(Number(value||0))+'円';
-function addText(parent,tag,text,className){const n=document.createElement(tag);n.textContent=String(text??'-');if(className)n.className=className;parent.appendChild(n);return n}function valueOf(product,key){return product[key]??product.attributes?.[key]??'-'}function formatValue(value,type){if(type==='yen')return yen(value);if(type==='number')return new Intl.NumberFormat('ja-JP').format(Number(value||0));return String(value??'-')}
-async function load(){try{const[configRes,productsRes]=await Promise.all([fetch(`/api/v1/config?tenant=${encodeURIComponent(tenantId)}`),fetch(`/api/v1/products?tenant=${encodeURIComponent(tenantId)}`)]);if(!configRes.ok||!productsRes.ok)throw new Error(`API ${configRes.status}/${productsRes.status}`);tenant=(await configRes.json()).tenant;products=(await productsRes.json()).products}catch{if(tenantId!=='demo'){byId('errorBox').hidden=false;byId('errorBox').textContent='このテナントを表示できません。商用ライセンスまたはサーバー設定を確認してください。';return}tenant=fallbackTenant;products=fallbackProducts}applyTenant();populateCategories();renderProducts()}
-function applyTenant(){document.documentElement.style.setProperty('--brand',tenant.brand?.primaryColor||'#185adb');byId('brandName').textContent=tenant.brand?.brandName||tenant.name||'Insurance Compare Engine';if(tenant.brand?.logoUrl){byId('brandLogo').src=tenant.brand.logoUrl;byId('brandLogo').hidden=false}byId('footerText').textContent=tenant.brand?.footerText||'Business and organizational use requires a paid commercial license.';for(const key of['operator','dataSource','relationship','updatedAt'])byId(key).textContent=tenant.disclosure?.[key]||'-';if(embedded){byId('siteHeader').classList.add('compact');byId('siteFooter').hidden=true}}
-function populateCategories(){const select=byId('category');[...new Set(products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja')).forEach(category=>{const option=document.createElement('option');option.value=category;option.textContent=category;select.appendChild(option)})}
-function visibleProducts(){const category=byId('category').value,maxPremium=Number(byId('maxPremium').value||Number.MAX_SAFE_INTEGER),sort=byId('sort').value,list=products.filter(p=>(category==='all'||p.category===category)&&Number(p.premium||0)<=maxPremium);list.sort((a,b)=>sort==='premiumAsc'?Number(a.premium)-Number(b.premium):sort==='coverageDesc'?Number(b.coverage)-Number(a.coverage):String(a.name).localeCompare(String(b.name),'ja'));return list}
-function renderProducts(){const root=byId('products');root.replaceChildren();const list=visibleProducts();byId('resultCount').textContent=String(list.length);byId('selectedCount').textContent=String(selected.size);if(!list.length)addText(root,'p','条件に一致する商品がありません。','empty-state');for(const product of list){const card=document.createElement('article');card.className='product-card';addText(card,'p',product.company,'company');addText(card,'h3',product.name);const price=document.createElement('div');price.className='price';addText(price,'span','登録月額','price-label');addText(price,'strong',yen(product.premium));card.appendChild(price);const facts=document.createElement('dl');facts.className='facts';for(const field of tenant.fields||[]){if(field.key==='company'||field.key==='premium')continue;const row=document.createElement('div');addText(row,'dt',field.label);addText(row,'dd',formatValue(valueOf(product,field.key),field.type));facts.appendChild(row)}card.appendChild(facts);const actions=document.createElement('div');actions.className='card-actions';const compare=document.createElement('button');compare.className='compare-button';compare.textContent=selected.has(product.id)?'比較から外す':'比較に追加';compare.setAttribute('aria-pressed',String(selected.has(product.id)));compare.addEventListener('click',()=>toggleProduct(product.id));const simulate=document.createElement('button');simulate.className='secondary';simulate.textContent='この条件で試算';simulate.addEventListener('click',()=>simulateProduct(product));actions.append(compare,simulate);card.appendChild(actions);root.appendChild(card)}renderComparison()}
-function toggleProduct(id){if(selected.has(id))selected.delete(id);else if(selected.size<3)selected.add(id);else{alert('比較できる商品は3件までです。');return}renderProducts()}
-function renderComparison(){const section=byId('comparisonSection'),table=byId('comparisonTable');table.replaceChildren();const items=products.filter(p=>selected.has(p.id));section.hidden=!items.length;if(!items.length)return;const allFields=[{key:'name',label:'商品名',type:'text'},...(tenant.fields||[])];for(const field of allFields){const row=document.createElement('tr');addText(row,'th',field.label);for(const item of items)addText(row,'td',formatValue(valueOf(item,field.key),field.type));table.appendChild(row)}}
-function localSimulation(product,age,coverage){const p=product.pricing||{};let premium=Number(p.basePremium??product.premium??0);const base=Number(p.baseCoverage??product.coverage??0),step=Number(p.coverageStep||0),per=Number(p.premiumPerStep||0);if(step>0&&coverage>base)premium+=Math.ceil((coverage-base)/step)*per;const band=Array.isArray(p.ageBands)?p.ageBands.find(x=>age>=Number(x.min)&&age<=Number(x.max)):null;if(band)premium*=Number(band.multiplier||1);return Math.round(premium)}
-async function simulateProduct(product){const age=Number(byId('age').value||40),coverage=Number(byId('desiredCoverage').value||product.coverage||0);let result;try{const res=await fetch(`/api/v1/simulate?tenant=${encodeURIComponent(tenantId)}`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tenantId,productId:product.id,age,coverage})});if(!res.ok)throw new Error(String(res.status));result=await res.json()}catch{result={productName:product.name,monthlyPremium:localSimulation(product,age,coverage),assumptions:{age,coverage},note:'静的デモによる参考試算です。実サービスでは登録済み料金ルールとAPIを使用します。'}}byId('simulationSection').hidden=false;const root=byId('simulationResult');root.replaceChildren();addText(root,'h3',result.productName);addText(root,'p',`試算月額: ${yen(result.monthlyPremium)}`,'simulation-price');addText(root,'p',`前提: 年齢 ${result.assumptions.age}歳 / 保障額 ${yen(result.assumptions.coverage)}`);addText(root,'p',result.note,'muted');byId('simulationSection').scrollIntoView({behavior:'smooth',block:'nearest'})}
-['category','maxPremium','sort'].forEach(id=>byId(id).addEventListener('input',renderProducts));byId('reset').addEventListener('click',()=>{byId('category').value='all';byId('maxPremium').value='10000';byId('sort').value='nameAsc';byId('age').value='40';byId('desiredCoverage').value='1000000';renderProducts()});byId('clearSelection').addEventListener('click',()=>{selected.clear();renderProducts()});load()}
-function initAdmin(){
-const byId=id=>document.getElementById(id),output=data=>{byId('output').textContent=typeof data==='string'?data:JSON.stringify(data,null,2)};function headers(){return{'content-type':'application/json','x-admin-token':byId('adminToken').value}}async function api(path,options={}){const res=await fetch(path,{...options,headers:{...headers(),...(options.headers||{})}}),data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(`${res.status} ${JSON.stringify(data)}`);return data}
-function parseCsv(text){const rows=[];let row=[],cell='',quoted=false;for(let i=0;i<text.length;i++){const c=text[i],n=text[i+1];if(c==='"'&&quoted&&n==='"'){cell+='"';i++}else if(c==='"')quoted=!quoted;else if(c===','&&!quoted){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!quoted){if(c==='\r'&&n==='\n')i++;row.push(cell);if(row.some(x=>x!==''))rows.push(row);row=[];cell=''}else cell+=c}row.push(cell);if(row.some(x=>x!==''))rows.push(row);if(rows.length<2)return[];const headers=rows[0].map(x=>x.trim());return rows.slice(1).map(values=>{const p={attributes:{}};headers.forEach((h,i)=>{const v=(values[i]??'').trim();if(['premium','coverage'].includes(h))p[h]=Number(v||0);else if(['id','name','company','category'].includes(h))p[h]=v;else if(h==='pricing'&&v){try{p.pricing=JSON.parse(v)}catch{p.attributes[h]=v}}else p.attributes[h]=v});return p})}
-async function loadState(){try{const data=await api('/api/admin/state');output(data);const first=data.tenants?.find(t=>t.id!=='demo')||data.tenants?.[0];if(first)fillTenant(first)}catch(e){output(e.message)}}function fillTenant(t){byId('tenantId').value=t.id||'';byId('tenantName').value=t.name||'';byId('tenantPlan').value=t.plan||'commercial';byId('siteLimit').value=t.siteLimit||1;byId('domains').value=(t.allowedDomains||[]).join('\n');byId('brandName').value=t.brand?.brandName||'';byId('brandColor').value=t.brand?.primaryColor||'#185adb';byId('logoUrl').value=t.brand?.logoUrl||'';byId('operator').value=t.disclosure?.operator||'';byId('dataSource').value=t.disclosure?.dataSource||'';byId('relationship').value=t.disclosure?.relationship||'';byId('fieldsJson').value=JSON.stringify(t.fields||[],null,2);byId('importTenant').value=t.id;byId('licenseTenant').value=t.id}
-async function saveTenant(){try{const body={id:byId('tenantId').value.trim(),name:byId('tenantName').value.trim(),plan:byId('tenantPlan').value,siteLimit:Number(byId('siteLimit').value||1),allowedDomains:byId('domains').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean),requiresCommercialLicense:true,brand:{brandName:byId('brandName').value.trim(),primaryColor:byId('brandColor').value.trim()||'#185adb',logoUrl:byId('logoUrl').value.trim(),footerText:'Powered by Insurance Compare Engine'},disclosure:{operator:byId('operator').value.trim(),dataSource:byId('dataSource').value.trim(),relationship:byId('relationship').value.trim(),updatedAt:new Date().toISOString().slice(0,10)},fields:JSON.parse(byId('fieldsJson').value)};output(await api('/api/admin/tenants',{method:'POST',body:JSON.stringify(body)}))}catch(e){output(e.message)}}
-async function importProducts(){try{const file=byId('productFile').files[0];if(!file)throw new Error('ファイルを選択してください');const text=await file.text();let products;if(file.name.toLowerCase().endsWith('.json')){const parsed=JSON.parse(text);products=Array.isArray(parsed)?parsed:parsed.products}else products=parseCsv(text);if(!Array.isArray(products))throw new Error('商品配列を読み込めません');output(await api('/api/admin/products/import',{method:'POST',body:JSON.stringify({tenantId:byId('importTenant').value.trim(),mode:byId('importMode').value,products})}))}catch(e){output(e.message)}}
-async function generateLicense(){try{const date=byId('expiresAt').value,body={tenantId:byId('licenseTenant').value.trim(),plan:'commercial',expiresAt:date?new Date(`${date}T23:59:59+09:00`).toISOString():null,siteLimit:Number(byId('licenseSites').value||1)};output(await api('/api/admin/licenses/generate',{method:'POST',body:JSON.stringify(body)}))}catch(e){output(e.message)}}
-byId('loadState').addEventListener('click',loadState);byId('saveTenant').addEventListener('click',saveTenant);byId('importProducts').addEventListener('click',importProducts);byId('generateLicense').addEventListener('click',generateLicense)}
+
+const query = new URLSearchParams(location.search);
+const adminMode = query.get('admin') === '1';
+const publicRoot = document.getElementById('publicApp');
+const adminRoot = document.getElementById('adminApp');
+publicRoot.hidden = adminMode;
+adminRoot.hidden = !adminMode;
+adminMode ? startAdmin() : startPublic();
+
+function node(root, id) { return root.querySelector('[id="' + id + '"]'); }
+function yen(value) { return new Intl.NumberFormat('ja-JP').format(Number(value || 0)) + '円'; }
+function text(parent, tag, value, className) {
+  const el = document.createElement(tag);
+  el.textContent = String(value ?? '-');
+  if (className) el.className = className;
+  parent.appendChild(el);
+  return el;
+}
+
+function startPublic() {
+  const tenantId = query.get('tenant') || 'demo';
+  const embedded = query.get('embed') === '1';
+  const selected = new Set();
+  let tenant;
+  let products = [];
+  const $ = id => node(publicRoot, id);
+  const fallbackTenant = {
+    id: 'demo',
+    brand: { brandName: 'Insurance Compare Engine', primaryColor: '#185adb', footerText: 'デモ環境 - 掲載データは架空です' },
+    disclosure: { operator: 'デモ運営者', dataSource: '架空のサンプルデータ', relationship: '実在の保険会社との利害関係はありません', updatedAt: '2026-08-14' },
+    fields: [
+      { key: 'company', label: '会社', type: 'text' }, { key: 'category', label: '種類', type: 'text' },
+      { key: 'premium', label: '月額保険料', type: 'yen' }, { key: 'coverage', label: '主契約保障額', type: 'yen' },
+      { key: 'deductible', label: '免責・自己負担', type: 'text' }, { key: 'waitingPeriod', label: '待機期間', type: 'text' }
+    ]
+  };
+  const fallbackProducts = [
+    { id:'m1',name:'医療 Standard',company:'サンプル生命A',category:'医療',premium:2980,coverage:1000000,attributes:{deductible:'なし',waitingPeriod:'30日'} },
+    { id:'m2',name:'医療 Light',company:'サンプル共済B',category:'医療',premium:1980,coverage:500000,attributes:{deductible:'5,000円',waitingPeriod:'30日'} },
+    { id:'l1',name:'定期生命 1000',company:'サンプル生命C',category:'生命',premium:3480,coverage:10000000,attributes:{deductible:'-',waitingPeriod:'なし'} },
+    { id:'c1',name:'がん Basic',company:'サンプル保険D',category:'がん',premium:2580,coverage:2000000,attributes:{deductible:'なし',waitingPeriod:'90日'} }
+  ];
+  const value = (p, key) => p[key] ?? p.attributes?.[key] ?? '-';
+  const format = (v, type) => type === 'yen' ? yen(v) : type === 'number' ? new Intl.NumberFormat('ja-JP').format(Number(v || 0)) : String(v ?? '-');
+
+  async function load() {
+    try {
+      const [configRes, productRes] = await Promise.all([
+        fetch('/api/v1/config?tenant=' + encodeURIComponent(tenantId)),
+        fetch('/api/v1/products?tenant=' + encodeURIComponent(tenantId))
+      ]);
+      if (!configRes.ok || !productRes.ok) throw new Error('api');
+      tenant = (await configRes.json()).tenant;
+      products = (await productRes.json()).products;
+    } catch {
+      if (tenantId !== 'demo') {
+        $('errorBox').hidden = false;
+        $('errorBox').textContent = 'このテナントを表示できません。商用ライセンスまたはサーバー設定を確認してください。';
+        return;
+      }
+      tenant = fallbackTenant; products = fallbackProducts;
+    }
+    applyTenant(); buildCategories(); render();
+  }
+  function applyTenant() {
+    document.documentElement.style.setProperty('--brand', tenant.brand?.primaryColor || '#185adb');
+    $('brandName').textContent = tenant.brand?.brandName || tenant.name || 'Insurance Compare Engine';
+    if (tenant.brand?.logoUrl) { $('brandLogo').src = tenant.brand.logoUrl; $('brandLogo').hidden = false; }
+    $('footerText').textContent = tenant.brand?.footerText || 'Business and organizational use requires a paid commercial license.';
+    ['operator','dataSource','relationship','updatedAt'].forEach(k => $(k).textContent = tenant.disclosure?.[k] || '-');
+    if (embedded) { $('siteHeader').classList.add('compact'); $('siteFooter').hidden = true; }
+  }
+  function buildCategories() {
+    [...new Set(products.map(p => p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ja')).forEach(c => {
+      const option = document.createElement('option'); option.value = c; option.textContent = c; $('category').appendChild(option);
+    });
+  }
+  function list() {
+    const c = $('category').value, max = Number($('maxPremium').value || Number.MAX_SAFE_INTEGER), sort = $('sort').value;
+    const rows = products.filter(p => (c === 'all' || p.category === c) && Number(p.premium || 0) <= max);
+    rows.sort((a,b) => sort === 'premiumAsc' ? a.premium-b.premium : sort === 'coverageDesc' ? b.coverage-a.coverage : a.name.localeCompare(b.name,'ja'));
+    return rows;
+  }
+  function render() {
+    const root = $('products'); root.replaceChildren(); const rows = list();
+    $('resultCount').textContent = rows.length; $('selectedCount').textContent = selected.size;
+    rows.forEach(p => {
+      const card = document.createElement('article'); card.className = 'product-card';
+      text(card,'p',p.company,'company'); text(card,'h3',p.name); text(card,'p','登録月額: ' + yen(p.premium),'price');
+      const facts = document.createElement('dl'); facts.className = 'facts';
+      (tenant.fields || []).filter(f => !['company','premium'].includes(f.key)).forEach(f => { const row=document.createElement('div'); text(row,'dt',f.label); text(row,'dd',format(value(p,f.key),f.type)); facts.appendChild(row); });
+      card.appendChild(facts);
+      const actions=document.createElement('div'); actions.className='card-actions';
+      const compare=document.createElement('button'); compare.className='compare-button'; compare.textContent=selected.has(p.id)?'比較から外す':'比較に追加'; compare.onclick=()=>toggle(p.id);
+      const simulate=document.createElement('button'); simulate.className='secondary'; simulate.textContent='この条件で試算'; simulate.onclick=()=>simulateProduct(p);
+      actions.append(compare,simulate); card.appendChild(actions); root.appendChild(card);
+    });
+    renderComparison();
+  }
+  function toggle(id) { if (selected.has(id)) selected.delete(id); else if (selected.size < 3) selected.add(id); else return alert('比較できる商品は3件までです。'); render(); }
+  function renderComparison() {
+    const items=products.filter(p=>selected.has(p.id)), table=$('comparisonTable'); table.replaceChildren(); $('comparisonSection').hidden=!items.length;
+    [{key:'name',label:'商品名',type:'text'},...(tenant.fields||[])].forEach(f=>{const tr=document.createElement('tr');text(tr,'th',f.label);items.forEach(p=>text(tr,'td',format(value(p,f.key),f.type)));table.appendChild(tr);});
+  }
+  async function simulateProduct(p) {
+    const age=Number($('age').value||40),coverage=Number($('desiredCoverage').value||p.coverage||0); let result;
+    try { const res=await fetch('/api/v1/simulate?tenant='+encodeURIComponent(tenantId),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({tenantId,productId:p.id,age,coverage})}); if(!res.ok)throw new Error('api'); result=await res.json(); }
+    catch { result={productName:p.name,monthlyPremium:p.premium,assumptions:{age,coverage},note:'API未接続時の参考表示です。'}; }
+    const root=$('simulationResult'); root.replaceChildren(); $('simulationSection').hidden=false; text(root,'h3',result.productName); text(root,'p','試算月額: '+yen(result.monthlyPremium),'simulation-price'); text(root,'p','前提: 年齢 '+age+'歳 / 保障額 '+yen(coverage)); text(root,'p',result.note,'muted');
+  }
+  ['category','maxPremium','sort'].forEach(id=>$(id).addEventListener('input',render));
+  $('reset').onclick=()=>{$('category').value='all';$('maxPremium').value=10000;$('sort').value='nameAsc';$('age').value=40;$('desiredCoverage').value=1000000;render();};
+  $('clearSelection').onclick=()=>{selected.clear();render();}; load();
+}
+
+function startAdmin() {
+  const $ = id => node(adminRoot, id);
+  const out = data => $('output').textContent = typeof data === 'string' ? data : JSON.stringify(data,null,2);
+  const headers = () => ({ 'content-type':'application/json', 'x-admin-token':$('adminToken').value });
+  async function api(path, options={}) { const res=await fetch(path,{...options,headers:{...headers(),...(options.headers||{})}}); const data=await res.json().catch(()=>({})); if(!res.ok)throw new Error(res.status+' '+JSON.stringify(data)); return data; }
+  function csvLine(line) { const cells=[]; let cell='',quoted=false; for(let i=0;i<line.length;i++){const c=line[i]; if(c==='"'){if(quoted&&line[i+1]==='"'){cell+='"';i++;}else quoted=!quoted;}else if(c===','&&!quoted){cells.push(cell);cell='';}else cell+=c;} cells.push(cell); return cells; }
+  function parseCsv(raw) { const rows=raw.split(/\r?\n/).filter(Boolean).map(csvLine); const keys=rows.shift()||[]; return rows.map(values=>{const p={attributes:{}};keys.forEach((k,i)=>{const v=(values[i]||'').trim();if(['premium','coverage'].includes(k))p[k]=Number(v||0);else if(['id','name','company','category'].includes(k))p[k]=v;else p.attributes[k]=v;});return p;}); }
+  function fill(t){ $('tenantId').value=t.id||'';$('tenantName').value=t.name||'';$('tenantPlan').value=t.plan||'commercial';$('siteLimit').value=t.siteLimit||1;$('domains').value=(t.allowedDomains||[]).join('\n');$('brandName').value=t.brand?.brandName||'';$('brandColor').value=t.brand?.primaryColor||'#185adb';$('logoUrl').value=t.brand?.logoUrl||'';$('operator').value=t.disclosure?.operator||'';$('dataSource').value=t.disclosure?.dataSource||'';$('relationship').value=t.disclosure?.relationship||'';$('fieldsJson').value=JSON.stringify(t.fields||[],null,2);$('importTenant').value=t.id;$('licenseTenant').value=t.id; }
+  $('loadState').onclick=async()=>{try{const data=await api('/api/admin/state');out(data);fill(data.tenants.find(t=>t.id!=='demo')||data.tenants[0]||{});}catch(e){out(e.message);}};
+  $('saveTenant').onclick=async()=>{try{const body={id:$('tenantId').value.trim(),name:$('tenantName').value.trim(),plan:$('tenantPlan').value,siteLimit:Number($('siteLimit').value||1),allowedDomains:$('domains').value.split(/\r?\n/).map(v=>v.trim()).filter(Boolean),requiresCommercialLicense:true,brand:{brandName:$('brandName').value.trim(),primaryColor:$('brandColor').value.trim()||'#185adb',logoUrl:$('logoUrl').value.trim(),footerText:'Powered by Insurance Compare Engine'},disclosure:{operator:$('operator').value.trim(),dataSource:$('dataSource').value.trim(),relationship:$('relationship').value.trim(),updatedAt:new Date().toISOString().slice(0,10)},fields:JSON.parse($('fieldsJson').value)};out(await api('/api/admin/tenants',{method:'POST',body:JSON.stringify(body)}));}catch(e){out(e.message);}};
+  $('importProducts').onclick=async()=>{try{const file=$('productFile').files[0];if(!file)throw new Error('ファイルを選択してください');const raw=await file.text();const parsed=file.name.toLowerCase().endsWith('.json')?JSON.parse(raw):parseCsv(raw);const products=Array.isArray(parsed)?parsed:parsed.products;if(!Array.isArray(products))throw new Error('商品配列を読み込めません');out(await api('/api/admin/products/import',{method:'POST',body:JSON.stringify({tenantId:$('importTenant').value.trim(),mode:$('importMode').value,products})}));}catch(e){out(e.message);}};
+  $('generateLicense').onclick=async()=>{try{const date=$('expiresAt').value;out(await api('/api/admin/licenses/generate',{method:'POST',body:JSON.stringify({tenantId:$('licenseTenant').value.trim(),plan:'commercial',expiresAt:date?new Date(date+'T23:59:59+09:00').toISOString():null,siteLimit:Number($('licenseSites').value||1)})}));}catch(e){out(e.message);}};
+}
