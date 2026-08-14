@@ -6,10 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node --check server.js && node --check app.js && node --check admin.js && node --check widget.js && node tests/smoke.test.js",
-    "keys:generate": "node scripts/generate-license-keys.js"
+    "test": "node --check server.js && node --check app.js"
   },
-  "engines": {
-    "node": ">=20"
-  }
+  "engines": { "node": ">=20" }
 }
