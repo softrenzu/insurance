@@ -1,0 +1,4 @@
+id,name,company,category,premium,coverage,deductible,waitingPeriod
+medical-a,医療プランA,サンプル生命A,医療,2980,1000000,なし,30日
+medical-b,医療プランB,サンプル共済B,医療,1980,500000,"5,000円",30日
+life-a,定期生命A,サンプル生命C,生命,3480,10000000,-,なし

@@ -1,0 +1,54 @@
+body {
+  font-family: Arial, "Yu Gothic UI", sans-serif;
+  margin: 0;
+  background: #f6f7f9;
+  color: #17202a;
+  line-height: 1.6;
+}
+header, main, footer, .admin-shell {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px;
+}
+.site-header { padding-top: 48px; }
+.license-badge {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid #d9dee5;
+  border-radius: 20px;
+  background: #fff;
+  font-weight: bold;
+}
+.notice, .controls, .product-card, .disclosure, .simulation-result, .admin-card {
+  background: #fff;
+  border: 1px solid #d9dee5;
+  border-radius: 12px;
+  padding: 16px;
+}
+.controls, .product-grid, .admin-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.controls, .disclosure, .simulation-section, .comparison-section { margin: 16px 0; }
+.field { display: grid; gap: 6px; margin-bottom: 8px; }
+input, select, button, textarea {
+  min-height: 42px;
+  padding: 8px 10px;
+  font: inherit;
+  box-sizing: border-box;
+}
+textarea { width: 100%; min-height: 100px; }
+.product-card { margin-bottom: 4px; }
+.compare-button, .primary { cursor: pointer; background: #185adb; color: #fff; border: 0; border-radius: 8px; }
+.secondary { cursor: pointer; background: #fff; border: 1px solid #cfd6df; border-radius: 8px; }
+.facts div, .disclosure dl div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #edf0f4; padding: 6px 0; }
+.facts dd, .disclosure dd { margin: 0; text-align: right; }
+.price, .card-actions, .admin-toolbar { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
+.card-actions { margin-top: 12px; }
+.simulation-price { font-size: 24px; font-weight: bold; }
+.muted, .company, footer { color: #65717f; }
+.output { white-space: pre-wrap; background: #17202a; color: #f3f5f7; padding: 14px; border-radius: 10px; overflow: auto; }
+table { width: 100%; border-collapse: collapse; background: #fff; }
+th, td { border: 1px solid #d9dee5; padding: 10px; text-align: left; }
+@media (max-width: 650px) { .card-actions, .admin-toolbar { align-items: stretch; flex-direction: column; } }
