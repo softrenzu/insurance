@@ -1,7 +1,20 @@
-# Commercial Use
+# Commercial Use / 商用利用
 
-Commercial and business use requires a separate paid license before use. This includes company evaluation, PoC, production, insurance comparison websites, SaaS, API, white-label, OEM, consulting, and system integration.
+このリポジトリは source-available であり、OSI準拠のオープンソースではありません。
 
-Commercial licensing, maintenance, and support: support@rooomtech.com
+企業、法人、個人事業、業務委託、顧客案件その他の事業目的での利用は、評価・PoC・デモ・開発・本番を含め、利用開始前に有償の商用ライセンス契約が必要です。
 
-The detailed scope, fee, term, deployments, support, and redistribution rights are defined in a separate written agreement.
+特に次の用途は商用ライセンス対象です。
+
+- 保険比較・検索・見積・試算Webサイト
+- SaaS、REST API、埋め込みWidget
+- ホワイトラベル、OEM、再販売
+- リード獲得、営業支援、顧客向けデモ
+- SI、コンサルティング、受託開発への組み込み
+- 社内評価、PoC、パイロット、本番運用
+
+商用契約では、サイト数、許可ドメイン、テナント数、契約期間、利用機能、保守、再配布可否等を個別に定めます。v2では電子署名付きライセンスキーでテナント、有効期限、サイト数、許可ドメインを検証できます。
+
+商用ライセンス、導入支援、保守: support@rooomtech.com
+
+詳細条件は `LICENSE.md` および別途締結する商用ソフトウェアライセンス契約に従います。
